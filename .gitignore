@@ -1,2 +1,5 @@
 backend/config.json
 *.onnx
+
+.git
+node_modules/
