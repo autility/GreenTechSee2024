@@ -76,16 +76,44 @@ export default function ClayComponent() { // Defining a default function compone
         });
       };
 
-      const selectWall = function(walls: any, id: number) {
-        // Assuming walls.offsetFaces.lines.points is an array of points
-        walls.offsetFaces.lines.points.forEach((point: any) => {
-          if (point.id === id) {
-        // Apply your selection logic here
-        // For example, you might change the color of the point
-        point.color = "blue";
+      const selectWall = function (walls: any, id: number) {
+        if (
+          !walls ||
+          !walls.offsetFaces ||
+          !walls.offsetFaces.lines ||
+          !walls.offsetFaces.lines.points
+        ) {
+          console.log("walls.offsetFaces.lines.points is not defined");
+          return;
+        }
+
+        // Convert the walls.offsetFaces.lines.points object to an array
+        const pointsArray = Object.values(walls.offsetFaces.lines.points);
+
+
+        // Now you can use forEach on pointsArray
+        pointsArray.forEach((point: any) => {
+          // Assuming point is an object with a start and end property that are Sets
+          for (let startElement of point.start) {
+            console.log("array start", pointsArray);
+            if (startElement === id) {
+              // Apply your selection logic here
+              // For example, you might change the color of the startElement
+              startElement.color = "blue";
+            }
+          }
+
+          for (let endElement of point.end) {
+            console.log("array end", pointsArray);
+            if (endElement === id) {
+              // Apply your selection logic here
+              // For example, you might change the color of the endElement
+              endElement.color = "blue";
+            }
           }
         });
-      }
+        console.log("array",pointsArray);
+      };
 
       // Add event listener
       const handleClick = () => {
