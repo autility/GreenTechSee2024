@@ -9,15 +9,48 @@
 <div>
   <div class="inputoutput">
     <img id="imageSrc" alt="No Image" />
-    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" /></div>
+    <div class="caption">imageSrc <input type="file" id="fileInput" name="file" onchange="displayImage(event)" /></div>
   </div>
 </div>
-<script src="./opencv.js" type="text/javascript">
-let imgElement = document.getElementById("imageSrc")
-let inputElement = document.getElementById("fileInput");
-inputElement.addEventListener("change", (e) => {
-  imgElement.src = URL.createObjectURL(e.target.files[0]);
-}, false);
+<script>
+  function displayImage(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function() {
+      const img = document.getElementById('imageSrc');
+      img.src = reader.result;
+      img.onload = function() {
+        img.addEventListener('click', function(event) {
+          const rect = img.getBoundingClientRect();
+          const x = event.clientX - rect.left;
+          const y = event.clientY - rect.top;
+          const coordinates = { x, y };
+          fetch('http://localhost:5000/clickCoordinates', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(coordinates),
+          })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log(data);
+          })
+          .catch(error => {
+            console.error('There was an error!', error);
+          });
+        });
+      };
+    };
+
+    reader.readAsDataURL(file);
+  }
 </script>
 </body>
 </html>

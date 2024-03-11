@@ -13,4 +13,5 @@
 * [ ] Load ONNX AI neural network profile
 * [ ] Set up output payload in backend
 * [ ] Serve payload from backend
+* [ ] Clean clay folder
 
