@@ -1,3 +1,5 @@
+from shapely.geometry import Polygon
+
 def jsonify_polygon(polygon):
     coords = list(polygon.exterior.coords)
     jsonify_coords = []

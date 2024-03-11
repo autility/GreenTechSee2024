@@ -19,7 +19,7 @@ class YOLOv8Seg:
             Initialization.
 
             Args:
-                onnx_model (str)L Path to ONNX model
+                onnx_model (str): Path to ONNX model
         """
         # Build Ort session
         self.session = ort.InferenceSession("room.onnx",
