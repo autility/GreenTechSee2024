@@ -8,7 +8,7 @@ import cv2
 from skimage import measure
 from shapely.ops import unary_union
 from shapely.geometry import Polygon
-from generate_planar_graph import generate_graph
+# from generate_planar_graph import generate_graph
 
 from lib.jsonify_polygon import *
 
@@ -92,7 +92,33 @@ class YOLOv8Seg:
         img = np.ascontiguousarray(np.einsum('HWC->CHW', img)[::-1], dtype=self.ndtype)
         img_process = img[None] if len(img.shape) == 3 else img
         return img_process, ratio, (pad_w, pad_h)
-    
+
+    def postprocess(self, preds, im0, ratio, pad_w, pad_h, conf_threshold, iou_threshold, nm=32):
+        x, protos = preds[0], preds[1]
+        x = np.einsum('bnc->bnc', x)
+        x = np.c_[x[..., :4], np.amax(x[..., :4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
+        x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
+
+        if len(x) > 0:
+            # Bounding boxes format change: cxcywh -> xyxy
+            x[..., [0, 1]] -= x[..., [2, 3]] / 2
+            x[..., [2, 3]] += x[..., [0, 1]]
+            # Rescale bounding boxes from model shape(height,width)
+            x[..., :4] -= [pad_w, pad_h, pad_w, pad_h]
+            x[..., :4] /= min(ratio)
+            # Bounding boxes boundary clamp
+            x[..., [0, 2]] = x[:, [0, 2]].clip(0, im0.shape[1])
+            x[..., [1, 3]] = x[:, [1, 3]].clip(0, im0.shape[0])
+
+            # Process masks
+            masks = self.process_mask(protos[0], x[:, :4], im0.shape)
+
+            # Masks -> segments(contours)
+            segments = tuple(map(self.mask_to_shape, masks))
+            return x[..., :6], masks
+        else:
+            return [], [], []
+
     @staticmethod
     def masks2segments(masks):
         """
