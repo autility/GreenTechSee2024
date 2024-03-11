@@ -8,3 +8,5 @@ def convert_to_three(graph):
         "edges": list(graph.edges()),
         "nodes": values
     }
+
+    return json_data

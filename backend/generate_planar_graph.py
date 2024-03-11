@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 from collections import defaultdict
 from scipy import ndimage
-from shapely.geometry import Polygon
+# from shapely.geometry import Polygon
 
 def generate_graph(all_room_edges, res):
     # viz_image = np.zeros((res, res, 3), dtype=np.uint8)
@@ -166,7 +166,6 @@ def merge_edges(edges):
 
     return adjusted_merged_edges
 
-
 def adjust_colinear_edges(edges):
     base_corner = (edges[0][0], edges[0][1][0])
     all_corners = [base_corner, (edges[0][0], edges[0][1][1])]
@@ -209,7 +208,6 @@ def adjust_colinear_edges(edges):
             adjusted_edge.append(segment)
         adjusted_edges.append(adjusted_edge)
     return adjusted_edges
-
 
 def adjust_room_edges(room_edges):
     refined_room_edges = list()
@@ -256,7 +254,6 @@ def adjust_room_edges(room_edges):
             new_edge = (refined_room_edges[edge_i][0], refined_room_edges[next_i][0])
             refined_room_edges[edge_i] = new_edge
     return refined_room_edges
-
 
 def clean_room_edges(all_room_edges):
     refined_room_paths = [_extract_room_path(room_edges) for room_edges in all_room_edges]
@@ -337,7 +334,6 @@ def clean_room_edges(all_room_edges):
 
     return all_room_edges
 
-
 def move_corner(c, target, corner_to_room, all_room_edges):
     rooms = corner_to_room[c]
     for room_idx in rooms:
@@ -351,7 +347,6 @@ def move_corner(c, target, corner_to_room, all_room_edges):
                     continue
                 all_room_edges[room_idx][edge_idx] = new_edge
     return all_room_edges
-
 
 def find_corners_to_merge(all_corners, corner_to_room, th=5):
     all_close_pairs = list()
@@ -385,7 +380,6 @@ def find_corners_to_merge(all_corners, corner_to_room, th=5):
 
     return corners_to_merge
 
-
 def find_one_close_set(all_corner_paris):
     all_pairs = list(all_corner_paris)  # make a copy of the input list
     combined = [False] * len(all_corner_paris)
@@ -394,7 +388,6 @@ def find_one_close_set(all_corner_paris):
 
     return close_set
 
-
 def get_corner_to_room(all_room_edges):
     room_paths = [_extract_room_path(room_edges) for room_edges in all_room_edges]
     corner_to_room = defaultdict(list)
@@ -402,7 +395,6 @@ def get_corner_to_room(all_room_edges):
         for corner in room_path:
             corner_to_room[corner].append(room_idx)
     return corner_to_room
-
 
 def filter_rooms(all_room_edges, im_size):
     # filter rooms that are covered by larger rooms
@@ -433,7 +425,6 @@ def filter_rooms(all_room_edges, im_size):
 
     return all_room_edges
 
-
 ## Utils
 
 class WrongRoomError(Exception):
@@ -443,17 +434,14 @@ def _extract_room_path(room_edges):
     room_path = [edge[0] for edge in room_edges]
     return room_path
 
-
 def len_edge(e):
     return np.sqrt((e[1][0] - e[0][0]) ** 2 + (e[1][1] - e[0][1]) ** 2)
-
 
 def unit_v_edge(e):
     len_e = len_edge(e)
     assert len_e != 0
     unit_v = ((e[1][0] - e[0][0]) / len_e, (e[1][1] - e[0][1]) / len_e)
     return unit_v
-
 
 def get_intersection(p0, p1, p2, p3):
     """
@@ -474,7 +462,6 @@ def get_intersection(p0, p1, p2, p3):
     else:
         return None
 
-
 def draw_room_seg_from_edges(edges, im_size):
     edge_map = np.zeros([im_size, im_size])
     for edge in edges:
@@ -492,4 +479,3 @@ def draw_room_seg_from_edges(edges, im_size):
     room_map[np.where(label == room_label)] = 1
 
     return room_map
-
