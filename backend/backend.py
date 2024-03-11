@@ -28,7 +28,7 @@ def root():
     with open("index.html") as file:
         return file.read()
     
-@app.route("detect", methods=['POST'])
+@app.route("/detect", methods=['POST'])
 def detect():
     """
         Handler of /detect POST endpoint
@@ -42,6 +42,8 @@ def detect():
     for room in rooms:
         if type(room) is not list:
             rooms.remove(room)
+    
+    return jsonify(rooms)
 
 yolo_classes = ["room"]
 

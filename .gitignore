@@ -1,5 +1,6 @@
 backend/config.json
 *.onnx
+__pycache__/
 
 .git
 node_modules/
