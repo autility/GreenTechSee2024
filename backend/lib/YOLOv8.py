@@ -26,7 +26,7 @@ class YOLOv8Seg:
                                             providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
                                             if ort.get_device() == 'GPU' else ['CPUExecutionProvider'])
         # Numpy dtype: support both FP32 and FP16 onnx model
-        self.ndtype = np.half if self.session.get_inputs()[0].type == 'sensor(float16)' else np.single
+        self.ndtype = np.half if self.session.get_inputs()[0].type == 'tensor(float16)' else np.single
         # Get model width and height(YOLOv8Seg only has one input)
         self.model_height, self.model_width = [x.shape for x in self.session.get_inputs()][0][-2:]
         # Load COCO class names
@@ -87,16 +87,20 @@ class YOLOv8Seg:
             img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
         top, bottom = int(round(pad_h - 0.1)), int(round(pad_h + 0.1))
         left, right = int(round(pad_w - 0.1)), int(round(pad_w + 0.1))
-        imt = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
+        img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
         # Transforms HWC to CHW -> RGB to RGB -> div(255) -> continuous -> add axis(optional)
         img = np.ascontiguousarray(np.einsum('HWC->CHW', img)[::-1], dtype=self.ndtype)
         img_process = img[None] if len(img.shape) == 3 else img
         return img_process, ratio, (pad_w, pad_h)
 
     def postprocess(self, preds, im0, ratio, pad_w, pad_h, conf_threshold, iou_threshold, nm=32):
+        """
+        
+        """
         x, protos = preds[0], preds[1]
         x = np.einsum('bnc->bnc', x)
-        x = np.c_[x[..., :4], np.amax(x[..., :4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
+        x = x[np.amax(x[..., 4:-nm], axis=-1) > conf_threshold]
+        x = np.c_[x[..., :4], np.amax(x[..., 4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
         x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
 
         if len(x) > 0:
@@ -111,11 +115,11 @@ class YOLOv8Seg:
             x[..., [1, 3]] = x[:, [1, 3]].clip(0, im0.shape[0])
 
             # Process masks
-            masks = self.process_mask(protos[0], x[:, :4], im0.shape)
+            masks = self.process_mask(protos[0], x[:, 6:], x[:, :4], im0.shape)
 
             # Masks -> segments(contours)
             segments = tuple(map(self.mask_to_shape, masks))
-            return x[..., :6], masks
+            return x[..., :6], list(segments), masks
         else:
             return [], [], []
 

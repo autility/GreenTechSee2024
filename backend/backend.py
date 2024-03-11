@@ -10,9 +10,12 @@ import cv2
 from skimage import measure
 from shapely.ops import unary_union
 from shapely.geometry import Polygon
-from generate_planar_graph import generate_graph
 
+from lib.generate_planar_graph import generate_graph
 from lib.YOLOv8 import *
+from lib.convert_to_three import *
+from lib.eport_to_json import *
+from lib.prepare_graph import *
 
 app = Flask(__name__)
 
@@ -43,6 +46,11 @@ def detect():
         if type(room) is not list:
             rooms.remove(room)
     
+    graph_data = prepare_data_for_graph(rooms, buf.stream, 512)
+    graph = generate_graph(graph_data)
+    json_data = convert_to_three(graph)
+    export_to_json(json_data)
+
     return jsonify(rooms)
 
 yolo_classes = ["room"]
