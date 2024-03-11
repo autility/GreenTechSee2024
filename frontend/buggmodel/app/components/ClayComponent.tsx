@@ -1,130 +1,129 @@
-'use client';
-import * as THREE from "three";
-import * as OBC from "openbim-components";
-import * as CLAY from "openbim-clay";
-import * as WEBIFC from "web-ifc";
+'use client'; // Specifies that this file is intended for client-side execution
 
-import Stats from "stats.js";
-import * as dat from "lil-gui";
-import { useEffect, useRef } from "react";
-import { Model } from "../classes/Model";
-// import { TransformControls } from "three/examples/jsm/controls/TransformControls";
+import * as THREE from "three"; // Importing the THREE library for 3D graphics
+import * as OBC from "openbim-components"; // Importing the openbim-components library
+import * as CLAY from "openbim-clay"; // Importing the openbim-clay library
+import * as WEBIFC from "web-ifc"; // Importing the web-ifc library
 
-export default function ClayComponent() {
-    const containerRef = useRef<HTMLDivElement>(null);
-  
-  useEffect(() => {
-      if (typeof window !== "undefined" && containerRef.current) {
+import Stats from "stats.js"; // Importing the stats.js library for performance monitoring
+import * as dat from "lil-gui"; // Importing the lil-gui library for creating GUI elements
+import { useEffect, useRef } from "react"; // Importing the useEffect and useRef hooks from React
+import { Model } from "../classes/Model"; // Importing the Model class from a local file
 
-const components = new OBC.Components();
+export default function ClayComponent() { // Defining a default function component named ClayComponent
+  const containerRef = useRef<HTMLDivElement>(null); // Creating a ref for a HTMLDivElement
 
-components.scene = new OBC.SimpleScene(components);
-const renderer = new OBC.PostproductionRenderer(components, containerRef.current);
-components.renderer = renderer;
-components.camera = new OBC.SimpleCamera(components);
-components.raycaster = new OBC.SimpleRaycaster(components);
+  useEffect(() => { // Using the useEffect hook to perform side effects after the component has rendered
+    if (typeof window !== "undefined" && containerRef.current) { // Checking if the window object is available and the containerRef is assigned a value
 
-components.init();
+      const components = new OBC.Components(); // Creating an instance of the Components class from openbim-components
 
-renderer.postproduction.enabled = true;
+      components.scene = new OBC.SimpleScene(components); // Creating a SimpleScene instance and assigning it to the scene property of components
+      const renderer = new OBC.PostproductionRenderer(components, containerRef.current); // Creating a PostproductionRenderer instance and assigning it to the renderer variable
+      components.renderer = renderer; // Assigning the renderer to the renderer property of components
+      components.camera = new OBC.SimpleCamera(components); // Creating a SimpleCamera instance and assigning it to the camera property of components
+      components.raycaster = new OBC.SimpleRaycaster(components); // Creating a SimpleRaycaster instance and assigning it to the raycaster property of components
 
-const scene = components.scene.get();
+      components.init(); // Initializing the components
 
-// components.camera.controls.setLookAt(12, 6, 8, 0, 0, -10);
+      renderer.postproduction.enabled = true; // Enabling postproduction effects in the renderer
 
-// components.scene.setup();
+      const scene = components.scene.get(); // Getting the scene from components
 
-const grid = new OBC.SimpleGrid(components, new THREE.Color(0x666666));
+      const grid = new OBC.SimpleGrid(components, new THREE.Color(0x666666)); // Creating a SimpleGrid instance with a color and assigning it to the grid variable
 
+      const customEffects = renderer.postproduction.customEffects; // Getting the customEffects property from the renderer
+      customEffects.excludedMeshes.push(grid.get()); // Adding the grid mesh to the excludedMeshes array of customEffects
 
+      const axesHelper = new THREE.AxesHelper(1); // Creating an AxesHelper instance with a size of 1 and assigning it to the axesHelper variable
+      scene.add(axesHelper); // Adding the axesHelper to the scene
 
-const customEffects = renderer.postproduction.customEffects;
-customEffects.excludedMeshes.push(grid.get());
+      const model = new Model(); // Creating an instance of the Model class
+      model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true); // Setting the Wasm path for the IFC API
+      model.init(); // Initializing the model
 
-const axesHelper = new THREE.AxesHelper(1);
-scene.add(axesHelper);
+      const walls = new CLAY.Walls(); // Creating an instance of the Walls class from openbim-clay and assigning it to the walls variable
+      scene.add(walls.offsetFaces.mesh); // Adding the offsetFaces mesh of walls to the scene
+      scene.add(walls.offsetFaces.lines.mesh); // Adding the lines mesh of offsetFaces to the scene
+      scene.add(walls.offsetFaces.lines.vertices.mesh); // Adding the vertices mesh of lines to the scene
 
-// IFC API
-///sdfsdf
-const model = new Model();
-model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true);
-model.init();
+      const settings = { // Creating a settings object
+        selectionStart: 0, // Property for selection start
+        selectionEnd: 0, // Property for selection end
+        pointSelectionStart: 0, // Property for point selection start
+        pointSelectionEnd: 0, // Property for point selection end
+        width: 0.25, // Property for width
+        offset: 0 // Property for offset
+      };
 
-const walls = new CLAY.Walls();
-scene.add(walls.offsetFaces.mesh);
-scene.add(walls.offsetFaces.lines.mesh);
-scene.add(walls.offsetFaces.lines.vertices.mesh);
+      walls.offsetFaces.lines.addPoints([ // Adding points to the lines of offsetFaces
+        [1, 0, 0], // Point 0
+        [3, 0, 0], // Point 1
+        [6, 0, 2], // Point 2
+        [3, 0, 4], // Point 3
+        [1, 0, 2], // Point 4
+      ]);
+      console.log(walls.offsetFaces.lines.points);
 
-const settings = {
-    selectionStart: 0,
-    selectionEnd: 0,
-    pointSelectionStart: 0,
-    pointSelectionEnd: 0,
-    width: 0.25,
-    offset: 0
-}
+      // Kan bruke det som ligger i console.log for å lage en ny vegg eller bruke som id for aa lege til highlight
 
-walls.offsetFaces.lines.addPoints([
-    [1, 0, 0], // 0
-    [3, 0, 0], // 1
-    [6, 0, 2], // 2
-    [3, 0, 4], // 3
-    [1, 0, 2], // 4
+      const highlightWalls = function(walls: any) {
+        // Assuming walls.offsetFaces.lines.points is an array of points
+        walls.offsetFaces.lines.points.select((point: any) => {
+          // Apply your highlighting logic here
+          // For example, you might change the color of the points
+          point.color = "red";
+        });
+      };
 
-]);
-// console.log(walls.offsetFaces);
-walls.offsetFaces.add([0, 1], 0.25);
-walls.offsetFaces.add([1, 2], 0.25);
-walls.offsetFaces.add([2, 3], 0.25);
-walls.offsetFaces.add([3, 0], 0.25);
-walls.offsetFaces.add([4, 3], 0.25);
+      const selectWall = function(walls: any, id: number) {
+        // Assuming walls.offsetFaces.lines.points is an array of points
+        walls.offsetFaces.lines.points.forEach((point: any) => {
+          if (point.id === id) {
+        // Apply your selection logic here
+        // For example, you might change the color of the point
+        point.color = "blue";
+          }
+        });
+      }
 
-walls.regenerate();
+      // Add event listener
+      const handleClick = () => {
+        const walls = new CLAY.Walls(); // Creating an instance of the Walls class from openbim-clay and assigning it to the walls variable
+        selectWall(walls, 1); // Call the selectWall function with the walls instance and the desired id
+      };
 
-// Set up GUI
+      const handleClickEventListener = () => {
+        if (containerRef.current) {
+          containerRef.current.addEventListener("click", handleClick); // Add event listener to the container element
+        }
 
-const gui = new dat.GUI();
+        return () => {
+          if (containerRef.current) {
+        containerRef.current.removeEventListener("click", handleClick); // Remove event listener when component unmounts
+          }
+        };
+      };
 
-// gui.add(walls.startPoint, "x").name("Start X").step(0.1).onChange(() => {
-//    walls.update(true);
-// });
+      handleClickEventListener();
 
-// gui.add().name("Start Y").onChange(() => {
-//    console.log("B<")
-// });
+      walls.offsetFaces.add([0, 1], 0.25); // Adding an offset face between points 0 and 1 with a width of 0.25
+      walls.offsetFaces.add([1, 2], 0.25); // Adding an offset face between points 1 and 2 with a width of 0.25
+      walls.offsetFaces.add([2, 3], 0.25); // Adding an offset face between points 2 and 3 with a width of 0.25
+      walls.offsetFaces.add([3, 0], 0.25); // Adding an offset face between points 3 and 0 with a width of 0.25
+      walls.offsetFaces.add([4, 3], 0.25); // Adding an offset face between points 4 and 3 with a width of 0.25
 
-// gui.add(wall.endPoint, "x").name("End X").min(-5).max(5).step(0.1).onChange(() => {
-//   wall.update();
-// });
+      walls.regenerate(); // Regenerating the walls
 
-// gui.add(wall.endPoint, "y").name("End Y").min(-5).max(5).step(0.1).onChange(() => {
-//   wall.update();
-// });
+      const gui = new dat.GUI(); // Creating a GUI instance
 
-// gui.add(wall, "width").name("Width").min(0.1).max(0.5).step(0.05).onChange(() => {
-//   wall.update();
-// });
+    }
+  }, []);
 
-// gui.add(wall, "height").name("Height").min(1).max(4).step(0.05).onChange(() => {
-//   wall.update();
-// });
-
-// gui.add(opening.position, "x").name("Opening X Position").min(-5).max(5).step(0.1).onChange(() => {
-//   wall.setOpening(opening);
-//   wall.update();
-// });
-
-// gui.add(opening.position, "y").name("Opening Y Position").min(-5).max(5).step(0.1).onChange(() => {
-//   wall.setOpening(opening);
-//   wall.update();
-// });
-
-}}, []);
-
-return (
-  <div
-    className={`fixed top-0 left-0 w-full h-full`}
-    ref={containerRef}
-  ></div>
-);
+  return (
+    <div
+      className={`fixed top-0 left-0 w-full h-full`}
+      ref={containerRef}
+    ></div>
+  );
 }
