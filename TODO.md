@@ -1,3 +1,5 @@
+# TODO
+
 * [x] Set up Git Repository - Fredrik
 * [x] Plan tasks - Everyone
 * [ ] Implement a front-end for the openCv code so we can add floors the AI misses.- Fredrik
