@@ -90,7 +90,6 @@ export default function ClayComponent() { // Defining a default function compone
         // Convert the walls.offsetFaces.lines.points object to an array
         const pointsArray = Object.values(walls.offsetFaces.lines.points);
 
-
         // Now you can use forEach on pointsArray
         pointsArray.forEach((point: any) => {
           // Assuming point is an object with a start and end property that are Sets
