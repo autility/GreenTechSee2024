@@ -1,40 +1,33 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
-    />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link rel="stylesheet" href="../../../../resources/styles.css" />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/icon?family=Material+Icons"
-    />
-    <link
-      rel="icon"
-      type="image/x-icon"
-      href="../../../../resources/favicon.ico"
-    />
-    <title>Tools Component</title>
-    <style>
-      body {
-        margin: 0;
-        padding: 0;
-      }
 
-      .full-screen {
-        width: 100vw;
-        height: 100vh;
-        position: relative;
-        overflow: hidden;
-      }
-    </style>
-  </head>
-  <body>
-    <div class="full-screen" id="container"></div>
-    <script type="importmap">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <link rel="stylesheet" href="../../../../resources/styles.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="icon" type="image/x-icon" href="../../../../resources/favicon.ico" />
+  <title>Tools Component</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    .full-screen {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="full-screen" id="container"></div>
+  <script type="importmap">
       {
         "imports": {
           "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
@@ -47,7 +40,8 @@
         }
       }
     </script>
-  </body>
+</body>
+
 </html>
 <script type="module">
   import * as THREE from "three";
@@ -88,6 +82,7 @@
 
   // IFC API
 
+
   const model = new CLAY.Model();
   model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true);
   await model.init();
@@ -98,41 +93,92 @@
   scene.add(walls.offsetFaces.lines.vertices.mesh);
 
   const settings = {
-      selectionStart: 0,
-      selectionEnd: 0,
-      pointSelectionStart: 0,
-      pointSelectionEnd: 0,
-      width: 0.25,
-      offset: 0
+    selectionStart: 0,
+    selectionEnd: 0,
+    pointSelectionStart: 0,
+    pointSelectionEnd: 0,
+    width: 0.25,
+    offset: 0
   }
 
-  walls.offsetFaces.lines.addPoints([
-      [1, 0, 0], // 0
-      [3, 0, 0], // 1
-      [6, 0, 2], // 2
-      [3, 0, 4], // 3
-      [1, 0, 2], // 4
+  const wallsArray = [[
+    [0, 0],
+    [4, 0],
+    [4, 4],
+    [3, 6],
+    [1, 6],
+    [0, 4],
+    [0, 0],
+  ],
+  [
+    [1, 6],
+    [3, 6],
+    [4, 8],
+    [4, 12],
+    [0, 12],
+    [0, 8],
+    [1, 6],
+  ]]
 
-  ]);
-  // console.log(walls.offsetFaces);
-  walls.offsetFaces.add([0, 1], 0.25);
-  walls.offsetFaces.add([1, 2], 0.25);
-  walls.offsetFaces.add([2, 3], 0.25);
-  walls.offsetFaces.add([3, 0], 0.25);
-  walls.offsetFaces.add([4, 3], 0.25);
+  const cubeArray = [
+    [0, 0],
+    [4, 0],
+    [4, 4],
+    [0, 4],
+    [0, 0],
+  ]
 
-  walls.regenerate();
+  function wallsRender(array) {
+    for (let i = 0; i < array.length; i++) {
+      if (i === array.length - 1) {
+        return
+      } else {
+        walls.offsetFaces.add([i, i + 1], 0.25);
+      }
+    }
+  }
+
+  function renderBuilding(array) {
+
+    let coordinatesArray = [];
+
+    array.map((data, index) => {
+      if (index === 0) {
+        coordinatesArray.push([data[0], 0, (data[1])]);
+      } else {
+        coordinatesArray.push([(data[0]), 0, (data[1])]);
+      }
+    });
+
+    console.log(`JSON array`, coordinatesArray);
+
+
+    console.log(`manual array`, array);
+
+    walls.offsetFaces.lines.addPoints(coordinatesArray);
+    console.log(walls.offsetFaces);
+
+    wallsRender(coordinatesArray);
+    walls.regenerate();
+
+  }
+
+  renderBuilding(wallsArray[0]);
+
+
+
+  // renderBuilding(wallsArray);
 
   // Set up GUI
 
   const gui = new dat.GUI();
 
   gui.add(walls.startPoint, "x").name("Start X").step(0.1).onChange(() => {
-     walls.update(true);
+    walls.update(true);
   });
 
   gui.add().name("Start Y").onChange(() => {
-     console.log("B<")
+    console.log("B<")
   });
 
   // gui.add(wall.endPoint, "x").name("End X").min(-5).max(5).step(0.1).onChange(() => {
