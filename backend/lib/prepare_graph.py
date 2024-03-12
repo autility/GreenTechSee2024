@@ -11,6 +11,7 @@ def prepare_data_for_graph(rooms, buf, res):
     if type(rooms) == list:
         print(f'rooms[0] type => {type(rooms[0])}')
     for pts in rooms:
+        # pts is a Polygon object, need to convert to points
         j = 0
         room_pts = []
         while j < len(pts)-1:
