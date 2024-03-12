@@ -1,4 +1,5 @@
 from PIL import Image
+from shapely.geometry import Polygon, mapping
 
 def prepare_data_for_graph(rooms, buf, res):
     im0 = Image.open(buf)
@@ -12,9 +13,14 @@ def prepare_data_for_graph(rooms, buf, res):
         print(f'rooms[0] type => {type(rooms[0])}')
     for pts in rooms:
         # pts is a Polygon object, need to convert to points
+        # print(pol)
+        # mpd = mapping(pol)
+        # pts = mpd['coordinates']
         j = 0
         room_pts = []
+        # print(f'pts => {pts}')
         while j < len(pts)-1:
+            # print(f'pts[j] => {pts[j]}')
             if (pts[j] == pts[j+1]):
                 pass
             else:

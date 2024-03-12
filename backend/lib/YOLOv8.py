@@ -98,7 +98,7 @@ class YOLOv8Seg:
         
         """
         x, protos = preds[0], preds[1]
-        x = np.einsum('bnc->bnc', x)
+        x = np.einsum('bcn->bnc', x)
         x = x[np.amax(x[..., 4:-nm], axis=-1) > conf_threshold]
         x = np.c_[x[..., :4], np.amax(x[..., 4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
         x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
@@ -152,10 +152,10 @@ class YOLOv8Seg:
         """
         """
         c, mh, mw = protos.shape
-        masks = np.matmul(masks_in, protos.reshape((c, -1))).reshape((-1, mh, mw)).transpose(1, 2, 0) # HWN
+        masks = np.matmul(masks_in, protos.reshape((c, -1))).reshape((-1, mh, mw)).transpose(1, 2, 0)  # HWN
         masks = np.ascontiguousarray(masks)
-        masks = self.scale_mask(masks, im0_shape) # re-scale masks
-        masks = np.einsum('HWN -> NHW', masks) # HWN -> NHW
+        masks = self.scale_mask(masks, im0_shape)  # re-scale mask from P3 shape to original input image shape
+        masks = np.einsum('HWN -> NHW', masks)  # HWN -> NHW
         masks = self.crop_mask(masks, bboxes)
         return np.greater(masks, 0.5)
     
@@ -164,21 +164,21 @@ class YOLOv8Seg:
         """
         """
         im1_shape = masks.shape[:2]
-        if ratio_pad is None:
-            gain = min(im1_shape[0] / im0_shape[0], im1_shape[1] / im0_shape[1])
-            pad = (im1_shape[1] - im0_shape[1] * gain) / 2, (im1_shape[0] - im0_shape[0] * gain) / 2
+        if ratio_pad is None:  # calculate from im0_shape
+            gain = min(im1_shape[0] / im0_shape[0], im1_shape[1] / im0_shape[1])  # gain  = old / new
+            pad = (im1_shape[1] - im0_shape[1] * gain) / 2, (im1_shape[0] - im0_shape[0] * gain) / 2  # wh padding
         else:
             pad = ratio_pad[1]
         # Calculate tlbr of mask
-        top, left = int(round(pad[1] - 0.1)), int(round(pad[0] - 0.1)) # y, x
+        top, left = int(round(pad[1] - 0.1)), int(round(pad[0] - 0.1))  # y, x
         bottom, right = int(round(im1_shape[0] - pad[1] + 0.1)), int(round(im1_shape[1] - pad[0] + 0.1))
         if len(masks.shape) < 2:
             raise ValueError(f'"len of masks shape" should be 2 or 3, but got {len(masks.shape)}')
         masks = masks[top:bottom, left:right]
-        masks = cv2.resize(masks, (im0_shape[1], im0_shape[0]), interpolation=cv2.INTER_CUBIC)
+        masks = cv2.resize(masks, (im0_shape[1], im0_shape[0]), interpolation=cv2.INTER_CUBIC)  # INTER_CUBIC would be better
         if len(masks.shape) == 2:
-            masks = [masks[:, :, None]]
-        return masks
+            masks = masks[:, :, None]
+        return masks    
     
     @staticmethod
     def mask_to_shape(mask):
