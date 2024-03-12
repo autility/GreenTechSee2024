@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "pipe": "next build && jest && next start",
+    "pipe": "next build && jest && next dev",
     "test": "jest"
   },
   "dependencies": {

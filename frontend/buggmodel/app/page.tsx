@@ -4,7 +4,7 @@ import ClayComponent from "./components/ClayComponent";
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col">
-        <ClayComponent />
+        <ClayComponent data-testid="clay-component" />
     </main>
   );
 }
