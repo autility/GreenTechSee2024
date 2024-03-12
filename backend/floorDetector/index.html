@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Room and Wall Segmentation</title>
+    <style>
+      canvas {
+        display: block;
+        border: 1px solid black;
+        margin-top: 10px;
+      }
+
+      .upload-button {
+        display: inline-block;
+        color: white;
+        background-color: #2f7756;
+        border: none;
+        padding: 10px 15px;
+        text-align: center;
+        text-decoration: none;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        transition-duration: 0.4s;
+      }
+
+      .upload-button:hover {
+        background-color: white;
+        color: #2f7756;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container"></div>
+    <label class="upload-button">
+      Upload Image
+      <input id="uploadInput" type="file" accept="image/*" hidden />
+    </label>
+
+    <canvas></canvas>
+    <button class="download-button" id="downloadButton">Download Image</button>
+    <button id="markAsReady">Send image for processing</button>
+    <script>
+      /**
+       * "Upload" button onClick handler: uploads selected image file
+       * to backend, receives array of detected objects
+       * and draws them on top of image
+       */
+      const input = document.getElementById("uploadInput");
+      input.addEventListener("change", async (event) => {
+        const data = new FormData();
+        data.append("image_file", event.target.files[0], "image_file");
+        draw_image_click(event.target.files[0]);
+      });
+
+      /**
+       * Function draws the image from provided file
+       * and bounding boxes of detected objects on
+       * top of the image
+       * @param file Uploaded file object
+       */
+      function draw_image_click(file) {
+        const img = new Image();
+        img.src = URL.createObjectURL(file);
+        img.onload = () => {
+          const canvas = document.querySelector("canvas");
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0);
+
+          canvas.addEventListener("click", function (event) {
+            const rect = img.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            debugger;
+            const y = event.clientY - rect.top - 25;
+            const coordinates = { x, y };
+            sendClickDataToFlask(canvas, img, x, y);
+          });
+        };
+      }
+
+      function sendClickDataToFlask(canvas, img, x, y) {
+        const ctx = canvas.getContext("2d");
+        const imageDataURL = canvas.toDataURL("image/png");
+        // Make an AJAX POST request to Flask backend
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/handle_click", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+            let colorChanged = false;
+            const response = JSON.parse(xhr.responseText);
+            // Getting the polygon coords from the backend
+            console.log("Received coordinates:", response.coordinates);
+            const polygon = response.coordinates;
+            ctx.beginPath();
+            ctx.moveTo(polygon[0][0], polygon[0][1]); // Move to the first point
+            for (let i = 1; i < polygon.length; i++) {
+              ctx.lineTo(polygon[i][0], polygon[i][1]); // Draw lines to subsequent points
+            }
+            ctx.closePath(); // Close the path
+            ctx.fillStyle = "rgba(255, 0, 0, 1)";
+
+            // Set fill color and transparency
+            ctx.fill();
+          }
+        };
+        xhr.send(JSON.stringify({ imageDataURL: imageDataURL, x: x, y: y }));
+      }
+      const downloadButton = document.getElementById("downloadButton");
+      downloadButton.addEventListener("click", function () {
+        const canvas = document.querySelector("canvas");
+        const dataURL = canvas.toDataURL("image/png");
+        const link = document.createElement("a");
+        link.href = dataURL;
+        link.download = "image.png";
+        link.click();
+      });
+    </script>
+  </body>
+</html>
