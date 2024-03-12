@@ -7,10 +7,10 @@ import * as WEBIFC from "web-ifc";
 import Stats from "stats.js";
 import * as dat from "lil-gui";
 import { useEffect, useRef } from "react";
-import { SimpleWallType } from "../../../clay/src/elements/Walls/SimpleWall/index";
-import { SimpleOpeningType } from "../../../clay/src/elements/Openings/index";
+import { SimpleWallType } from "../classes/SimpleWallType";
+import { SimpleOpeningType } from "../classes/SimpleOpeningType";
 import { TransformControls } from "three/examples/jsm/Addons.js";
-import { Model } from "../../../clay/src/base";
+import { Model } from "../classes/Model";
 
 
 export default function Test() {
@@ -144,10 +144,11 @@ const sample_rooms = [
       
       model.init().then(()=>{
       
-
+  let wallsArray: CLAY.Walls[] = [];
   function renderBuilding(array: number[][]) {
 
     const walls = new CLAY.Walls();
+    wallsArray.push(walls);
     scene.add(walls.offsetFaces.mesh);
     scene.add(walls.offsetFaces.lines.mesh);
     scene.add(walls.offsetFaces.lines.vertices.mesh);
@@ -198,6 +199,27 @@ const sample_rooms = [
         
   
         const gui = new dat.GUI();
+
+
+        var obj = {
+          // Function to delete the next wall in the list
+          deleteNextWall: function() {
+            if (wallsArray.length > 0) {
+              // For example, always delete the first wall in the list for simplicity
+              const wallToDelete = wallsArray.shift();
+              if (wallToDelete && wallToDelete.offsetFaces && wallToDelete.offsetFaces.mesh) {
+                scene.remove(wallToDelete.offsetFaces.mesh);
+                // You might also want to remove lines and vertices if needed
+                scene.remove(wallToDelete.offsetFaces.lines.mesh);
+                scene.remove(wallToDelete.offsetFaces.lines.vertices.mesh);
+              }
+            } else {
+              console.log("No more walls to delete!");
+            }
+          }
+        };
+    
+        gui.add(obj, 'deleteNextWall').name('Delete Next Wall');
   
         // gui
         //   .add(wall.startPoint, "x")

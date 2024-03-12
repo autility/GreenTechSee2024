@@ -114,6 +114,16 @@
 
   const gui = new dat.GUI();
 
+  var obj = {
+  del: function() {
+    scene.remove(...wall.meshes)
+    
+  }
+};
+
+
+gui.add(obj, 'del').name('Delete Specific Items');
+
   gui.add(wall.startPoint, "x").name("Start X").min(-5).max(5).step(0.1).onChange(() => {
     wall.update(true);
   });
