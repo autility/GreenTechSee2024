@@ -64,6 +64,8 @@ export default function Test() {
   
         wall.addOpening(opening);
         wall.update(true);
+
+        console.log("Wall", wall)
   
         window.addEventListener("keydown", () => {
           wall.removeOpening(opening);

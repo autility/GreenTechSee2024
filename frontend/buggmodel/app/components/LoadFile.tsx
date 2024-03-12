@@ -199,11 +199,13 @@ useEffect(() => {
                 });
                 console.log('Express ID -> ', expressID);
                 const fragment = fragments.list[fragmentID];
-                const currentMesh = fragment.mesh;
+                let currentMesh = fragment.mesh;
                 const scaleFolder = gui.addFolder("Scale")
                 scaleFolder.add(currentMesh.scale, "x").min(0).max(5).step(0.01).name("scaleX");
                 scaleFolder.add(currentMesh.scale, "y").min(0).max(5).step(0.01).name("scaleY");
                 scaleFolder.add(currentMesh.scale, "z").min(0).max(5).step(0.01).name("scaleZ");
+                scaleFolder.add(currentMesh, "visible").name("Delete");
+
                 // gui.add(cube, "visible");
                 // gui.add(material, "wireframe");
                 // gui.addColor(parameters, "color").onChange(() => {
