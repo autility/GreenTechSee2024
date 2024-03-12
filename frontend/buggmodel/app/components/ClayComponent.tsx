@@ -14,12 +14,16 @@ export default function ClayComponent() { // Defining a default function compone
   const containerRef = useRef<HTMLDivElement>(null); // Creating a ref for a HTMLDivElement
 
   useEffect(() => { // Using the useEffect hook to perform side effects after the component has rendered
-    if (typeof window !== "undefined" && containerRef.current) { // Checking if the window object is available and the containerRef is assigned a value
+    if (typeof window !== "undefined" && containerRef.current) {
+      // Checking if the window object is available and the containerRef is assigned a value
 
       const components = new OBC.Components(); // Creating an instance of the Components class from openbim-components
 
       components.scene = new OBC.SimpleScene(components); // Creating a SimpleScene instance and assigning it to the scene property of components
-      const renderer = new OBC.PostproductionRenderer(components, containerRef.current); // Creating a PostproductionRenderer instance and assigning it to the renderer variable
+      const renderer = new OBC.PostproductionRenderer(
+        components,
+        containerRef.current
+      ); // Creating a PostproductionRenderer instance and assigning it to the renderer variable
       components.renderer = renderer; // Assigning the renderer to the renderer property of components
       components.camera = new OBC.SimpleCamera(components); // Creating a SimpleCamera instance and assigning it to the camera property of components
       components.raycaster = new OBC.SimpleRaycaster(components); // Creating a SimpleRaycaster instance and assigning it to the raycaster property of components
@@ -42,97 +46,103 @@ export default function ClayComponent() { // Defining a default function compone
       model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true); // Setting the Wasm path for the IFC API
       model.init(); // Initializing the model
 
+      console.log("model",model); // Logging the model object to the console
+
       const walls = new CLAY.Walls(); // Creating an instance of the Walls class from openbim-clay and assigning it to the walls variable
+      console.log(walls); // Logging the walls object to the console
       scene.add(walls.offsetFaces.mesh); // Adding the offsetFaces mesh of walls to the scene
       scene.add(walls.offsetFaces.lines.mesh); // Adding the lines mesh of offsetFaces to the scene
       scene.add(walls.offsetFaces.lines.vertices.mesh); // Adding the vertices mesh of lines to the scene
 
-      const settings = { // Creating a settings object
+      const settings = {
+        // Creating a settings object
         selectionStart: 0, // Property for selection start
         selectionEnd: 0, // Property for selection end
         pointSelectionStart: 0, // Property for point selection start
         pointSelectionEnd: 0, // Property for point selection end
         width: 0.25, // Property for width
-        offset: 0 // Property for offset
+        offset: 0, // Property for offset
       };
 
-      walls.offsetFaces.lines.addPoints([ // Adding points to the lines of offsetFaces
+      walls.offsetFaces.lines.addPoints([
+        // Adding points to the lines of offsetFaces
         [1, 0, 0], // Point 0
         [3, 0, 0], // Point 1
         [6, 0, 2], // Point 2
         [3, 0, 4], // Point 3
         [1, 0, 2], // Point 4
       ]);
-      console.log(walls.offsetFaces.lines.points);
+      // console.log(walls.offsetFaces.lines.points);
 
-      // Kan bruke det som ligger i console.log for å lage en ny vegg eller bruke som id for aa lege til highlight
+      // // Convert the walls.offsetFaces.lines.points object to an array
+      // let pointsArray: any = [];
+      // for (let point of Object.values(walls.offsetFaces.lines.points)) {
+      //   pointsArray.push(point);
+      // }
 
-      const highlightWalls = function(walls: any) {
-        // Assuming walls.offsetFaces.lines.points is an array of points
-        walls.offsetFaces.lines.points.select((point: any) => {
-          // Apply your highlighting logic here
-          // For example, you might change the color of the points
-          point.color = "red";
-        });
-      };
+      // const selectWall = function (walls: CLAY.Walls, id: number) {
+      //   if (
+      //     !walls ||
+      //     !walls.offsetFaces ||
+      //     !walls.offsetFaces.lines ||
+      //     !walls.offsetFaces.lines.points
+      //   ) {
+      //     console.log("walls.offsetFaces.lines.points is not defined");
+      //     return;
+      //   }
 
-      const selectWall = function (walls: any, id: number) {
-        if (
-          !walls ||
-          !walls.offsetFaces ||
-          !walls.offsetFaces.lines ||
-          !walls.offsetFaces.lines.points
-        ) {
-          console.log("walls.offsetFaces.lines.points is not defined");
-          return;
-        }
+      //   // Now you can use forEach on pointsArray
+      //   pointsArray.forEach((point: any) => {
+      //     console.log(
+      //   "object in pointArray for eatch",
+      //   walls.offsetFaces.lines.points
+      //     );
+      //     const color = new THREE.Color(0x0000ff); // Create a new color
+      //       point.color.set(color); // Set the color of the point
 
-        // Convert the walls.offsetFaces.lines.points object to an array
-        const pointsArray = Object.values(walls.offsetFaces.lines.points);
+      //     // Assuming point is an object with a start and end property that are Sets
+      //   //   for (let startElement of point.start) {
+      //   // console.log("array start", pointsArray);
+      //   // if (startElement === id) {
+      //   //   // Apply your selection logic here
+      //   //   // For example, you might change the color of the startElement
+      //   //   // startElement.mesh.material.color.set("blue");
+      //   //   console.log("startElement mesh", startElement);
+      //   // }
+      //   //   }
 
-        // Now you can use forEach on pointsArray
-        pointsArray.forEach((point: any) => {
-          // Assuming point is an object with a start and end property that are Sets
-          for (let startElement of point.start) {
-            console.log("array start", pointsArray);
-            if (startElement === id) {
-              // Apply your selection logic here
-              // For example, you might change the color of the startElement
-              startElement.color = "blue";
-            }
-          }
+      //   //   for (let endElement of point.end) {
+      //   // console.log("array end", pointsArray);
+      //   // if (endElement === id) {
+      //   //   // Apply your selection logic here
+      //   //   // For example, you might change the color of the endElement
+      //   //   // endElement.mesh.color.set("blue");
+      //   //   console.log("endElement mesh", endElement);
+      //   // }
+      //   //   }
+      //   });
+      //   console.log("array", pointsArray);
+      // };
 
-          for (let endElement of point.end) {
-            console.log("array end", pointsArray);
-            if (endElement === id) {
-              // Apply your selection logic here
-              // For example, you might change the color of the endElement
-              endElement.color = "blue";
-            }
-          }
-        });
-        console.log("array",pointsArray);
-      };
+      // // Add event listener
+      // const handleClick = (event: MouseEvent) => {
+      //   // const walls = new CLAY.Walls(); // Creating an instance of the Walls class from openbim-clay and assigning it to the walls variable
+      //   // selectWall(walls, 1); // Call the selectWall function with the walls instance and the desired id
+      //   console.log("handleClick", event)
+      // };
 
-      // Add event listener
-      const handleClick = () => {
-        const walls = new CLAY.Walls(); // Creating an instance of the Walls class from openbim-clay and assigning it to the walls variable
-        selectWall(walls, 1); // Call the selectWall function with the walls instance and the desired id
-      };
+      // const handleClickEventListener = () => {
+      //   if (containerRef.current) {
+      //     containerRef.current.addEventListener("click", handleClick); // Add event listener to the container element
+      //   }
 
-      const handleClickEventListener = () => {
-        if (containerRef.current) {
-          containerRef.current.addEventListener("click", handleClick); // Add event listener to the container element
-        }
+      //   return () => {
+      //     if (containerRef.current) {
+      //       containerRef.current.removeEventListener("click", handleClick); // Remove event listener when component unmounts
+      //     }
+      //   };
+      // };
 
-        return () => {
-          if (containerRef.current) {
-        containerRef.current.removeEventListener("click", handleClick); // Remove event listener when component unmounts
-          }
-        };
-      };
-
-      handleClickEventListener();
 
       walls.offsetFaces.add([0, 1], 0.25); // Adding an offset face between points 0 and 1 with a width of 0.25
       walls.offsetFaces.add([1, 2], 0.25); // Adding an offset face between points 1 and 2 with a width of 0.25
@@ -142,8 +152,10 @@ export default function ClayComponent() { // Defining a default function compone
 
       walls.regenerate(); // Regenerating the walls
 
-      const gui = new dat.GUI(); // Creating a GUI instance
+      // handleClickEventListener();
 
+
+      const gui = new dat.GUI(); // Creating a GUI instance
     }
   }, []);
 
