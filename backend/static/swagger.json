@@ -1,0 +1,60 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "2D to 3D API",
+        "version": "0.0.1"
+    },
+    "paths": {
+        "/detect": {
+            "post": {
+                "description": "Receives form data with an image and return point data",
+                "produces": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "name": "image file",
+                        "in": "body",
+                        "description": "Image file",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation"
+                    }
+                }
+            }
+        },
+        "/python": {
+            "get": {
+                "description": "Who founded Python programming language?",
+                "responses": {
+                    "200": {
+                        "description": "Successful"
+                    }
+                }
+            }
+        },
+        "/typescript": {
+            "get": {
+                "description": "Who founded TypeScript programming language?",
+                "responses": {
+                    "200": {
+                        "description": "Successful"
+                    }
+                }
+            }
+        },
+        "/javascript": {
+            "get": {
+                "description": "Who founded JavaScript programming language?",
+                "responses": {
+                    "200": {
+                        "description": "Successful"
+                    }
+                }
+            }
+        }
+    }
+}

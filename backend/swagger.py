@@ -15,6 +15,7 @@ from flask_swagger_generator.generators import Generator
 # from flask_swagger_generator.generators import SwaggerVersion
 from flask_swagger_generator.specifiers import SwaggerThreeSpecifier
 from flask_swagger_generator.utils import SecurityType
+from flask_swagger_ui import get_swaggerui_blueprint
 
 from lib.generate_planar_graph import generate_graph
 from lib.YOLOv8 import *
@@ -22,10 +23,22 @@ from lib.convert_to_three import *
 from lib.export_to_json import *
 from lib.prepare_graph import *
 
-swagger_destination_path = '/static/swagger.yaml'
+swagger_destination_path = 'swagger.yaml'
 blueprint = Blueprint('objects', __name__)
 app = Flask(__name__)
 
+
+SWAGGER_URL="/swagger"
+API_URL="/static/swagger.json"
+
+swagger_ui_blueprint = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config={
+        'app_name': '2D to 3D API'
+    }
+)
+app.register_blueprint(swagger_ui_blueprint, url_prefix=SWAGGER_URL)
 # generator = Generator.of("SwaggerVersion.VERSION_THREE")
 # generator = Generator.of(SwaggerVersion.VERSION_THREE)
 generator = Generator.of('VERSION_THREE')
@@ -47,6 +60,36 @@ def root():
     with open("index.html") as file:
         return file.read()
     
+@blueprint.route("/python")
+def python():
+    """
+    Easter egg
+    """
+    r = {
+        "founder": "Guido van Rossom"
+    }
+    return jsonify(r)
+
+@blueprint.route("/typescript")
+def typescript():
+    """
+    Easter egg
+    """
+    r = {
+        "founder": "Anders Hejlsberg"
+    }
+    return jsonify(r)
+
+@blueprint.route("/javascript")
+def javascript():
+    """
+    Easter egg
+    """
+    r = {
+        "founder": "Brendan Eich"
+    }
+    return jsonify(r)
+
 @blueprint.route("/detect", methods=['POST'])
 def detect():
     """
