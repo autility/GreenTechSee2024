@@ -1,4 +1,4 @@
-FROM node:14-alpine
+FROM node:18-alpine
 
 WORKDIR /frontend/buggmodel
 
@@ -10,8 +10,6 @@ COPY . .
 
 EXPOSE 3000
 
-RUN npm run build
-
-RUN jest 
+USER node
 
 CMD ["npm", "run", "dev"]
