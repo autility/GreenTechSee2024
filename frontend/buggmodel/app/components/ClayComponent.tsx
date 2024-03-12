@@ -174,7 +174,7 @@ const sample_rooms = [
     walls.offsetFaces.lines.addPoints(coordinatesArray);
 
     wallsRender(coordinatesArray);
-    walls.mesh.addEventListener("click", (event)=>{console.log("Click mesh", event)})
+    walls.offsetFaces.mesh.addEventListener("click", (event)=>{console.log("Click mesh", event)});
     walls.regenerate();
 
     console.log("Walls list: ", walls);
