@@ -19,9 +19,14 @@ The docker way:
 Run docker-compose up to get both backend and frontend up together. Then go to https://localhost:3000 to see the frontend.
 
 Only FrontEnd: Run npm run pipe to start the cd pipeline for the frontend server
+
+
+
 Only BackEnd: Run flask ...
 
 Navigating to the frontend page will take you here:
 ![image](https://github.com/autility/GreenTechSee2024/assets/141043748/81419495-0352-481e-ad8e-e59f8153f39d)
 Where you can upload the image for the floor detector. After that the backend will create your model and you are ready to edit!
 
+Then you will be able to view your model:
+![image](https://github.com/autility/GreenTechSee2024/assets/33781086/ba0c2336-6464-48a3-a353-b7359198d671)
