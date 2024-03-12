@@ -1,16 +1,16 @@
 'use client';
-import * as THREE from "three";
-import * as OBC from "openbim-components";
-import * as CLAY from "openbim-clay";
-import * as WEBIFC from "web-ifc";
+import * as THREE from "three"; // Importing the THREE library for 3D graphics
+import * as OBC from "openbim-components"; // Importing the openbim-components library
+import * as CLAY from "openbim-clay"; // Importing the openbim-clay library
+import * as WEBIFC from "web-ifc"; // Importing the web-ifc library
 
 import Stats from "stats.js";
 import * as dat from "lil-gui";
 import { useEffect, useRef } from "react";
-import { SimpleWallType } from "../../../clay/src/elements/Walls/SimpleWall/index";
-import { SimpleOpeningType } from "../../../clay/src/elements/Openings/index";
+import { SimpleWallType } from "../classes/SimpleWallType";
+import { SimpleOpeningType } from "../classes/SimpleOpeningType";
 import { TransformControls } from "three/examples/jsm/Addons.js";
-import { Model } from "../../../clay/src/base";
+import { Model } from "../classes/Model";
 
 
 export default function Test() {

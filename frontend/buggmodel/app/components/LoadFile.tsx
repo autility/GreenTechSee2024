@@ -108,8 +108,8 @@ useEffect(() => {
             // const result = await downloadZip(files).blob();
 
                
-                const fetcher = await fetch('models/small.ifc');
-                console.log('Fetcher -> ', fetcher);
+            const fetcher = await fetch('models/small.ifc');
+            console.log('Fetcher -> ', fetcher);
             const buffer = await fetcher.arrayBuffer();
             console.log('Buffer -> ', buffer);
             const ifc = await propsManager.saveToIfc(fragmentsModel, new Uint8Array(buffer));

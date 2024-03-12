@@ -2,6 +2,9 @@ import * as THREE from "three";
 import * as WEBIFC from "web-ifc";
 import { IfcLineObject } from "web-ifc";
 export class Model {
+    toJSON() {
+      throw new Error("Method not implemented.");
+    }
     material = new THREE.MeshLambertMaterial();
   
     materialT = new THREE.MeshLambertMaterial({
