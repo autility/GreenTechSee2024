@@ -4,10 +4,12 @@ def prepare_data_for_graph(rooms, buf, res):
     im0 = Image.open(buf)
     all_room_edges = [] 
     img_width, img_height = im0.size
-    # img_width, img_height = 4778, 4678
     x_fact = res/img_width
     y_fact = res/img_height
 
+    print(f'rooms type => {type(rooms)}')
+    if type(rooms) == list:
+        print(f'rooms[0] type => {type(rooms[0])}')
     for pts in rooms:
         j = 0
         room_pts = []
@@ -21,5 +23,4 @@ def prepare_data_for_graph(rooms, buf, res):
             j += 1
         all_room_edges.append(room_pts)
 
-    # print(all_room_edges)
     return all_room_edges
