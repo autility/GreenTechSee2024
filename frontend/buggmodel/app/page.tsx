@@ -1,10 +1,10 @@
-import Image from "next/image";
-import ClayComponent from "./components/ClayComponent";
+
+import Test from "./components/Test";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col">
-        <ClayComponent />
+        <Test />
     </main>
   );
 }

@@ -12,6 +12,9 @@ import { Model } from "../classes/Model";
 
 export default function ClayComponent() {
     const containerRef = useRef<HTMLDivElement>(null);
+    const parameters = {
+      color: "red",
+    };
   
   useEffect(() => {
       if (typeof window !== "undefined" && containerRef.current) {
@@ -45,7 +48,6 @@ const axesHelper = new THREE.AxesHelper(1);
 scene.add(axesHelper);
 
 // IFC API
-///sdfsdf
 const model = new Model();
 model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true);
 model.init();
@@ -85,6 +87,27 @@ walls.regenerate();
 
 const gui = new dat.GUI();
 
+const scaleFolder = gui.addFolder("Scale")
+scaleFolder.add(walls.mesh.position, "x").min(0).max(5).step(0.01).name("scaleX").onChange((v:number)=>{console.log("v: ", v); walls.mesh.position.set(v, walls.mesh.position.y, walls.mesh.position.z); walls.regenerate();});
+scaleFolder.add(walls.mesh.scale, "y").min(0).max(5).step(0.01).name("scaleY");
+scaleFolder.add(walls.mesh.scale, "z").min(0).max(5).step(0.01).name("scaleZ");
+gui.add(walls.mesh, "visible");
+gui.add(walls.mesh.material, "wireframe");
+
+// gui.add(walls.baseColor, "x").name("Start X").step(0.1).onChange(() => {
+//    walls.update(true);
+// });
+
+// gui.add().name("Start Y").onChange(() => {
+//    console.log("B<")
+// });
+gui.addColor(parameters, "color").onChange((v:any) => {
+  
+  if(!Array.isArray(walls.mesh.material)){
+    walls.mesh.material.blendColor.set(parameters.color)
+  }
+});
+
 // gui.add(walls.startPoint, "x").name("Start X").step(0.1).onChange(() => {
 //    walls.update(true);
 // });
@@ -118,6 +141,10 @@ const gui = new dat.GUI();
 //   wall.setOpening(opening);
 //   wall.update();
 // });
+
+return  () => {
+  components.dispose();
+};
 
 }}, []);
 
