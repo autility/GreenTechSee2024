@@ -2,8 +2,10 @@
 
 # import json
 # import onnxruntime as ort
+import base64
 from flask import request, Flask, jsonify, Blueprint
 from waitress import serve
+from lib.inpaint import *
 # from PIL import Image
 # import numpy as np
 # import cv2
@@ -111,6 +113,23 @@ def detect():
     export_to_json(json_data)
 
     return jsonify(rooms)
+
+@blueprint.route('/handle_click', methods=['POST'])
+def handle_click():
+    data = request.json
+    imageDataURL = data['imageDataURL']
+    x = data['x']
+    y = data['y']
+    base64_str = imageDataURL.split(',')[1]
+    image_data = base64.b64decode(base64_str)
+    # Convert the image data to a numpy array
+    nparr = np.frombuffer(image_data, np.uint8)
+    # Decode the image using OpenCV
+    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+    room_polygon = inpaint_click(img, [x,y])
+    coordinates = list(room_polygon.exterior.coords)
+    return jsonify({"coordinates": coordinates})
+
 
 yolo_classes = ["room"]
 

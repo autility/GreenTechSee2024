@@ -26,6 +26,11 @@
                 }
             }
         },
+        "/handle_click": {
+            "post": {
+                "description": ""
+            }
+        },
         "/python": {
             "get": {
                 "description": "Who founded Python programming language?",

@@ -29,9 +29,6 @@
                body:data
            });
            const boxes = await response.json();
-           //  walls = items[1]
-           //  scaled_width = items[2]
-           //  scaled_height = items[3]
            draw_image_and_boxes(event.target.files[0], boxes);
        })
 
@@ -45,21 +42,10 @@
           const img = new Image()
           img.src = URL.createObjectURL(file);
           img.onload = () => {
-              // var diffY;
-              // var diffX;
               const canvas = document.querySelector("canvas");
               canvas.width = img.width;
               canvas.height = img.height;
-              // if (img.width > img.height) {
-              //   diffY = (img.width - img.height)/2;
-              //   diffX = 0;
-              // } else {
-              //   diffY = 0;
-              //   diffX = (img.height - img.width)/2;
-              // }
-              // console.log(diffX, diffY);
               const ctx = canvas.getContext("2d");
-              // ctx.drawImage(img, 0, 0, scaled_width, scaled_height);
               ctx.drawImage(img,0,0);
               ctx.strokeStyle = "#00FF00";
               ctx.lineWidth = 3;
@@ -72,24 +58,41 @@
                   });
                   ctx.closePath();
                   ctx.fill();
-                //   ctx.strokeRect(x1,y1,x2-x1,y2-y1);
-                //   ctx.fillStyle = "#00ff00";
-                //   const width = ctx.measureText(label).width;
-                //   ctx.fillRect(x1,y1,width+10,25);
-                //   ctx.fillStyle = "#000000";
-                //   ctx.fillText(label, x1, y1+18);
               });
-
-              // walls.forEach((_polygon) => {
-              //     ctx.fillStyle = "rgba(0,0,255,0.5)";
-              //     ctx.beginPath();
-              //     _polygon.forEach(([x,y]) => {
-              //       ctx.lineTo(x,y);
-              //     });
-              //     ctx.closePath();
-              //     ctx.fill();
-              // });
+              canvas.addEventListener('click', function(event) {
+                const rect = img.getBoundingClientRect();
+                const x = event.clientX - rect.left;
+                const y = event.clientY - rect.top;
+                const coordinates = { x, y };
+                sendClickDataToFlask(canvas, img, x, y);
+              });
           }
+      }
+
+      function sendClickDataToFlask(canvas, img, x, y) {
+        const ctx = canvas.getContext("2d");
+        const imageDataURL = canvas.toDataURL("image/png");
+        // Make an AJAX POST request to Flask backend
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "/handle_click", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === XMLHttpRequest.DONE && xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                // Getting the polygon coords from the backend 
+                console.log("Received coordinates:", response.coordinates);
+                const polygon = response.coordinates;
+                ctx.beginPath();
+                ctx.moveTo(polygon[0][0], polygon[0][1]); // Move to the first point
+                for (let i = 1; i < polygon.length; i++) {
+                    ctx.lineTo(polygon[i][0], polygon[i][1]); // Draw lines to subsequent points
+                }
+                ctx.closePath(); // Close the path
+                ctx.fillStyle = 'rgba(0, 255, 0, 0.5)'; // Set fill color and transparency
+                ctx.fill();
+            }
+        };
+        xhr.send(JSON.stringify({imageDataURL: imageDataURL, x: x, y: y}));
       }
     </script>
 </body>

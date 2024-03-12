@@ -97,19 +97,29 @@ class YOLOv8Seg:
         """
         
         """
-        x, protos = preds[0], preds[1]
+        x, protos = preds[0], preds[1]  # Two outputs: predictions and protos
+        # Transpose the first output: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
         x = np.einsum('bcn->bnc', x)
-        x = x[np.amax(x[..., 4:-nm], axis=-1) > conf_threshold]
-        x = np.c_[x[..., :4], np.amax(x[..., 4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
-        x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
 
+        # Predictions filtering by conf-threshold
+        x = x[np.amax(x[..., 4:-nm], axis=-1) > conf_threshold]
+        # Create a new matrix which merge these(box, score, cls, nm) into one
+        # For more details about `numpy.c_()`: https://numpy.org/doc/1.26/reference/generated/numpy.c_.html
+        x = np.c_[x[..., :4], np.amax(x[..., 4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
+
+        # NMS filtering
+        x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
+        # Decode and return
         if len(x) > 0:
+
             # Bounding boxes format change: cxcywh -> xyxy
             x[..., [0, 1]] -= x[..., [2, 3]] / 2
             x[..., [2, 3]] += x[..., [0, 1]]
-            # Rescale bounding boxes from model shape(height,width)
+
+            # Rescales bounding boxes from model shape(model_height, model_width) to the shape of original image
             x[..., :4] -= [pad_w, pad_h, pad_w, pad_h]
             x[..., :4] /= min(ratio)
+
             # Bounding boxes boundary clamp
             x[..., [0, 2]] = x[:, [0, 2]].clip(0, im0.shape[1])
             x[..., [1, 3]] = x[:, [1, 3]].clip(0, im0.shape[0])
@@ -117,9 +127,10 @@ class YOLOv8Seg:
             # Process masks
             masks = self.process_mask(protos[0], x[:, 6:], x[:, :4], im0.shape)
 
-            # Masks -> segments(contours)
+            # Masks -> Segments(contours)
+            # segments = self.masks2segments(masks)
             segments = tuple(map(self.mask_to_shape, masks))
-            return x[..., :6], list(segments), masks
+            return x[..., :6], list(segments), masks  # boxes, segments, masks
         else:
             return [], [], []
 

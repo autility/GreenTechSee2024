@@ -1,7 +1,7 @@
 openapi: 3.0.1
 info:
   title: Application
-  description: Generated at 12/03/2024 16:35:45. This is the swagger 
+  description: Generated at 12/03/2024 17:00:26. This is the swagger 
     ui based on the open api 3.0 specification of the Application
   version: 1.0.0 created by the flask swagger generator.
 externalDocs:
@@ -64,4 +64,9 @@ paths:
       tags:
       - objects
       operationId: 'detect'
+  '/handle_click':
+    post:
+      tags:
+      - objects
+      operationId: 'handle_click'
 components:
