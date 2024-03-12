@@ -87,10 +87,7 @@
   model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true);
   await model.init();
 
-  const walls = new CLAY.Walls();
-  scene.add(walls.offsetFaces.mesh);
-  scene.add(walls.offsetFaces.lines.mesh);
-  scene.add(walls.offsetFaces.lines.vertices.mesh);
+
 
   const settings = {
     selectionStart: 0,
@@ -128,42 +125,60 @@
     [0, 0],
   ]
 
-  function wallsRender(array) {
-    for (let i = 0; i < array.length; i++) {
-      if (i === array.length - 1) {
-        return
-      } else {
-        walls.offsetFaces.add([i, i + 1], 0.25);
-      }
-    }
-  }
+  const sample_rooms = [[2345, 3659], [2345, 4268], [2566, 4268], [2566, 4254], [2568, 4252], [2605, 4252], [2606, 4268], [2762, 4268], [2762, 3659], [2345, 3659]]
+  const sample_rooms2 = [[2788, 3677], [2788, 4269], [3346, 4268], [3346, 4253], [3353, 4252], [3353, 3677], [2788, 3677]]
+
+
 
   function renderBuilding(array) {
+
+    const walls = new CLAY.Walls();
+    scene.add(walls.offsetFaces.mesh);
+    scene.add(walls.offsetFaces.lines.mesh);
+    scene.add(walls.offsetFaces.lines.vertices.mesh);
+
+    function wallsRender(array) {
+      for (let i = 0; i < array.length; i++) {
+        if (i === array.length - 1) {
+          return
+        } else {
+          walls.offsetFaces.add([i, i + 1], 0.25);
+        }
+      }
+    }
 
     let coordinatesArray = [];
 
     array.map((data, index) => {
       if (index === 0) {
-        coordinatesArray.push([data[0], 0, (data[1])]);
+        coordinatesArray.push([(data[0] / 100), 0, (data[1] / 100)]);
       } else {
-        coordinatesArray.push([(data[0]), 0, (data[1])]);
+        coordinatesArray.push([(data[0] / 100), 0, (data[1] / 100)]);
       }
     });
 
     console.log(`JSON array`, coordinatesArray);
 
 
-    console.log(`manual array`, array);
-
     walls.offsetFaces.lines.addPoints(coordinatesArray);
     console.log(walls.offsetFaces);
 
     wallsRender(coordinatesArray);
+
+    // walls.startPoint.set(0, 0, 0);
+    console.log(walls);
+
     walls.regenerate();
+
+    walls.offsetFaces.lines.clear();
+
+    walls.update(true);
+
 
   }
 
-  renderBuilding(wallsArray[0]);
+  renderBuilding(sample_rooms);
+  renderBuilding(sample_rooms2);
 
 
 
