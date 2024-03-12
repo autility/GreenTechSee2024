@@ -164,6 +164,7 @@ useEffect(() => {
             const json = await model.toJSON();
             console.log('Local Properties -> ', json);
             model.setLocalProperties(json);
+            model.position.y = 4;
             classifier.byStorey(model);
             classifier.byEntity(model);
             
@@ -204,6 +205,8 @@ useEffect(() => {
                 scaleFolder.add(currentMesh.scale, "x").min(0).max(5).step(0.01).name("scaleX");
                 scaleFolder.add(currentMesh.scale, "y").min(0).max(5).step(0.01).name("scaleY");
                 scaleFolder.add(currentMesh.scale, "z").min(0).max(5).step(0.01).name("scaleZ");
+                scaleFolder.add(currentMesh, "visible").name("Delete");
+                scaleFolder.add(currentMesh.material, "wireframe").name("Wireframe");
                 // gui.add(cube, "visible");
                 // gui.add(material, "wireframe");
                 // gui.addColor(parameters, "color").onChange(() => {
