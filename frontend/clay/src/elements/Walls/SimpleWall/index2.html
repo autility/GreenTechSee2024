@@ -1,21 +1,94 @@
-'use client'; // Specifies that this file is intended for client-side execution
+<!doctype html>
+<html lang="en">
 
-import * as THREE from "three"; // Importing the THREE library for 3D graphics
-import * as OBC from "openbim-components"; // Importing the openbim-components library
-import * as CLAY from "openbim-clay"; // Importing the openbim-clay library
-import * as WEBIFC from "web-ifc"; // Importing the web-ifc library
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport"
+    content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+  <link rel="stylesheet" href="../../../../resources/styles.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="icon" type="image/x-icon" href="../../../../resources/favicon.ico" />
+  <title>Tools Component</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+    }
 
-import Stats from "stats.js";
-import * as dat from "lil-gui";
-import { useEffect, useRef } from "react";
-import { SimpleWallType } from "../../../clay/src/elements/Walls/SimpleWall/index";
-import { SimpleOpeningType } from "../../../clay/src/elements/Openings/index";
-import { TransformControls } from "three/examples/jsm/Addons.js";
-import { Model } from "../../../clay/src/base";
+    .full-screen {
+      width: 100vw;
+      height: 100vh;
+      position: relative;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="full-screen" id="container"></div>
+  <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+          "openbim-clay": "../../../../resources/openbim-clay.js",
+          "web-ifc": "https://unpkg.com/web-ifc@0.0.51/web-ifc-api.js",
+          "openbim-components": "https://thatopen.github.io/engine_components/resources/openbim-components.js",
+          "stats.js/src/Stats.js": "https://unpkg.com/stats-js@1.0.1/src/Stats.js",
+          "three/examples/jsm/libs/lil-gui.module.min": "https://unpkg.com/three@0.160.1/examples/jsm/libs/lil-gui.module.min.js",
+          "three/examples/jsm/controls/TransformControls": "https://unpkg.com/three@0.135.0/examples/jsm/controls/TransformControls.js"
+        }
+      }
+    </script>
+</body>
+
+</html>
+<script type="module">
+  import * as THREE from "three";
+  import * as OBC from "openbim-components";
+  import * as CLAY from "openbim-clay";
+  import * as WEBIFC from "web-ifc";
+
+  import Stats from "stats.js/src/Stats.js";
+  import * as dat from "three/examples/jsm/libs/lil-gui.module.min";
+  import { TransformControls } from "three/examples/jsm/controls/TransformControls";
+
+  const container = document.getElementById("container");
+
+  const components = new OBC.Components();
+
+  components.scene = new OBC.SimpleScene(components);
+  components.renderer = new OBC.PostproductionRenderer(components, container);
+  components.camera = new OBC.SimpleCamera(components);
+  components.raycaster = new OBC.SimpleRaycaster(components);
+
+  components.init();
+
+  components.renderer.postproduction.enabled = true;
+
+  const scene = components.scene.get();
+
+  components.camera.controls.setLookAt(12, 6, 8, 0, 0, -10);
+
+  components.scene.setup();
+
+  const grid = new OBC.SimpleGrid(components, new THREE.Color(0x666666));
+
+  const customEffects = components.renderer.postproduction.customEffects;
+  customEffects.excludedMeshes.push(grid.get());
+
+  const axesHelper = new THREE.AxesHelper(1);
+  scene.add(axesHelper);
+
+  // IFC API
 
 
-export default function Test() {
-  const containerRef = useRef<HTMLDivElement>(null);
+  const model = new CLAY.Model();
+  model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true);
+  await model.init();
+
+
+
   const settings = {
     selectionStart: 0,
     selectionEnd: 0,
@@ -53,7 +126,8 @@ export default function Test() {
   ]
 
   // const sample_rooms = [[2345, 3659], [2345, 4268], [2566, 4268], [2566, 4254], [2568, 4252], [2605, 4252], [2606, 4268], [2762, 4268], [2762, 3659], [2345, 3659]]
-  const sample_rooms2 = [[2788, 3677], [2788, 4269], [3346, 4268], [3346, 4253], [3353, 4252], [3353, 3677], [2788, 3677]];
+  // const sample_rooms2 = [[2788, 3677], [2788, 4269], [3346, 4268], [3346, 4253], [3353, 4252], [3353, 3677], [2788, 3677]]
+
   const rooms_example = [[[2345, 3659], [2345, 4268], [2566, 4268], [2566, 4254], [2568, 4252], [2605, 4252], [2606, 4268], [2762, 4268], [2762, 3659], [2345, 3659]], [[2788, 3677], [2788, 4269], [3346, 4268], [3346, 4253], [3353, 4252], [3353, 3677], [2788, 3677]]
 ]
 
@@ -104,56 +178,17 @@ const sample_rooms = [
 [1722, 1540],
  [1722, 960], [1666, 960], [1665, 944], [941, 944]] ]
 
-  useEffect(() => {
-    const components = new OBC.Components();
-    if (typeof window !== "undefined" && containerRef.current) {
-      
-      
-      components.scene = new OBC.SimpleScene(components);
-      const renderer = new OBC.PostproductionRenderer(
-        components,
-        containerRef.current
-      );
-      
-      components.renderer = renderer;
-      const camera = new OBC.SimpleCamera(components);
-      components.camera = camera;
-      components.raycaster = new OBC.SimpleRaycaster(components);
 
-      components.init();
-      
 
-      const scene = components.scene.get();
-      renderer.postproduction.enabled = true;
-      camera.controls.setLookAt(12, 6, 8, 0, 0, -10);
 
-      // components.scene.setup();
-
-      const grid = new OBC.SimpleGrid(components, new THREE.Color(0x666666));
-
-      const customEffects = renderer.postproduction.customEffects;
-      customEffects.excludedMeshes.push(grid.get());
-
-      const axesHelper = new THREE.AxesHelper(1);
-      scene.add(axesHelper);
-
-      // IFC API
-
-      const model = new Model();
-      
-      model.ifcAPI.SetWasmPath("https://unpkg.com/web-ifc@0.0.50/", true);
-      
-      model.init().then(()=>{
-      
-
-  function renderBuilding(array: number[][]) {
+  function renderBuilding(array) {
 
     const walls = new CLAY.Walls();
     scene.add(walls.offsetFaces.mesh);
     scene.add(walls.offsetFaces.lines.mesh);
     scene.add(walls.offsetFaces.lines.vertices.mesh);
 
-    function wallsRender(array:number[][]) {
+    function wallsRender(array) {
       for (let i = 0; i < array.length; i++) {
         if (i === array.length - 1) {
           return
@@ -163,7 +198,7 @@ const sample_rooms = [
       }
     }
 
-    let coordinatesArray:number[][] = [];
+    let coordinatesArray = [];
 
     array.map((data, index) => {
       if (index === 0) {
@@ -172,129 +207,74 @@ const sample_rooms = [
         coordinatesArray.push([(data[0] / 100), 0, (data[1] / 100)]);
       }
     });
+
+    console.log(`JSON array`, coordinatesArray);
+
+
     walls.offsetFaces.lines.addPoints(coordinatesArray);
+    console.log(walls.offsetFaces);
 
     wallsRender(coordinatesArray);
-    walls.mesh.addEventListener("click", (event)=>{console.log("Click mesh", event)})
+
+    // walls.startPoint.set(0, 0, 0);
+    console.log(walls);
+
     walls.regenerate();
 
-    console.log("Walls list: ", walls);
-
     walls.offsetFaces.lines.clear();
+
+    walls.update(true);
 
 
   }
 
+  // renderBuilding(sample_rooms);
+  // renderBuilding(sample_rooms2);
+
   sample_rooms.map((data, index) => {
     renderBuilding(data);
+  })
+
+
+
+  // renderBuilding(wallsArray);
+
+  // Set up GUI
+
+  const gui = new dat.GUI();
+
+  gui.add(walls.startPoint, "x").name("Start X").step(0.1).onChange(() => {
+    walls.update(true);
   });
 
-  
+  gui.add().name("Start Y").onChange(() => {
+    console.log("B<")
+  });
 
-      
-      
+  // gui.add(wall.endPoint, "x").name("End X").min(-5).max(5).step(0.1).onChange(() => {
+  //   wall.update();
+  // });
 
-  
-        // Set up GUI
-        
-  
-        const gui = new dat.GUI();
-  
-        // gui
-        //   .add(wall.startPoint, "x")
-        //   .name("Start X")
-        //   .min(-5)
-        //   .max(5)
-        //   .step(0.1)
-        //   .onChange(() => {
-        //     wall.update(true);
-        //   });
-  
-        // gui
-        //   .add(wall.startPoint, "y")
-        //   .name("Start Y")
-        //   .min(-5)
-        //   .max(5)
-        //   .step(0.1)
-        //   .onChange(() => {
-        //     wall.update(true);
-        //   });
-  
-        // gui
-        //   .add(wall.endPoint, "x")
-        //   .name("End X")
-        //   .min(-5)
-        //   .max(5)
-        //   .step(0.1)
-        //   .onChange(() => {
-        //     wall.update(true);
-        //   });
-  
-        // gui
-        //   .add(wall.endPoint, "y")
-        //   .name("End Y")
-        //   .min(-5)
-        //   .max(5)
-        //   .step(0.1)
-        //   .onChange(() => {
-        //     wall.update(true);
-        //   });
-  
-        // gui
-        //   .add(wall, "height")
-        //   .name("Height")
-        //   .min(1)
-        //   .max(4)
-        //   .step(0.05)
-        //   .onChange(() => {
-        //     wall.update(true);
-        //   });
-  
-        // gui
-        //   .add(simpleWallType, "width")
-        //   .name("Width")
-        //   .min(0.1)
-        //   .max(0.5)
-        //   .step(0.05)
-        //   .onChange(() => {
-        //     simpleWallType.update(true);
-        //   });
-  
-        // gui
-        //   .add(opening.position, "x")
-        //   .name("Opening X Position")
-        //   .min(-5)
-        //   .max(5)
-        //   .step(0.1)
-        //   .onChange(() => {
-        //     wall.setOpening(opening);
-        //     wall.update(true);
-        //   });
-  
-        // gui
-        //   .add(opening.position, "y")
-        //   .name("Opening Y Position")
-        //   .min(-5)
-        //   .max(5)
-        //   .step(0.1)
-        //   .onChange(() => {
-        //     wall.setOpening(opening);
-        //     wall.update(true);
-        //   });
-      });
+  // gui.add(wall.endPoint, "y").name("End Y").min(-5).max(5).step(0.1).onChange(() => {
+  //   wall.update();
+  // });
 
+  // gui.add(wall, "width").name("Width").min(0.1).max(0.5).step(0.05).onChange(() => {
+  //   wall.update();
+  // });
 
+  // gui.add(wall, "height").name("Height").min(1).max(4).step(0.05).onChange(() => {
+  //   wall.update();
+  // });
 
-    }
-    return  () => {
-      components.dispose();
-  };
-  }, []);
+  // gui.add(opening.position, "x").name("Opening X Position").min(-5).max(5).step(0.1).onChange(() => {
+  //   wall.setOpening(opening);
+  //   wall.update();
+  // });
 
-  return (
-    <div
-      className={`fixed top-0 left-0 w-full h-full`}
-      ref={containerRef}
-    ></div>
-  );
-}
+  // gui.add(opening.position, "y").name("Opening Y Position").min(-5).max(5).step(0.1).onChange(() => {
+  //   wall.setOpening(opening);
+  //   wall.update();
+  // });
+
+</script>

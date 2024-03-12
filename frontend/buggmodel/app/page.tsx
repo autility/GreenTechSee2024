@@ -1,5 +1,7 @@
-import Image from "next/image";
+
+import Test from "./components/Test";
 import ClayComponent from "./components/ClayComponent";
+import LoadFile from "./components/LoadFile";
 
 export default function Home() {
   return (
