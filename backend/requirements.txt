@@ -6,3 +6,6 @@ opencv-python
 scikit-image
 shapely==2.0.1
 pytest
+flask-swagger-generator
+flask_swagger_ui
+

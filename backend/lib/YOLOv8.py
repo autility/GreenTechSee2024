@@ -8,7 +8,7 @@ import cv2
 from skimage import measure
 from shapely.ops import unary_union
 from shapely.geometry import Polygon
-from generate_planar_graph import generate_graph
+# from generate_planar_graph import generate_graph
 
 from lib.jsonify_polygon import *
 
@@ -19,14 +19,14 @@ class YOLOv8Seg:
             Initialization.
 
             Args:
-                onnx_model (str)L Path to ONNX model
+                onnx_model (str): Path to ONNX model
         """
         # Build Ort session
         self.session = ort.InferenceSession("room.onnx",
                                             providers=['CUDAExecutionProvider', 'CPUExecutionProvider']
                                             if ort.get_device() == 'GPU' else ['CPUExecutionProvider'])
         # Numpy dtype: support both FP32 and FP16 onnx model
-        self.ndtype = np.half if self.session.get_inputs()[0].type == 'sensor(float16)' else np.single
+        self.ndtype = np.half if self.session.get_inputs()[0].type == 'tensor(float16)' else np.single
         # Get model width and height(YOLOv8Seg only has one input)
         self.model_height, self.model_width = [x.shape for x in self.session.get_inputs()][0][-2:]
         # Load COCO class names
@@ -87,12 +87,53 @@ class YOLOv8Seg:
             img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
         top, bottom = int(round(pad_h - 0.1)), int(round(pad_h + 0.1))
         left, right = int(round(pad_w - 0.1)), int(round(pad_w + 0.1))
-        imt = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
+        img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(114, 114, 114))
         # Transforms HWC to CHW -> RGB to RGB -> div(255) -> continuous -> add axis(optional)
         img = np.ascontiguousarray(np.einsum('HWC->CHW', img)[::-1], dtype=self.ndtype)
         img_process = img[None] if len(img.shape) == 3 else img
         return img_process, ratio, (pad_w, pad_h)
-    
+
+    def postprocess(self, preds, im0, ratio, pad_w, pad_h, conf_threshold, iou_threshold, nm=32):
+        """
+        
+        """
+        x, protos = preds[0], preds[1]  # Two outputs: predictions and protos
+        # Transpose the first output: (Batch_size, xywh_conf_cls_nm, Num_anchors) -> (Batch_size, Num_anchors, xywh_conf_cls_nm)
+        x = np.einsum('bcn->bnc', x)
+
+        # Predictions filtering by conf-threshold
+        x = x[np.amax(x[..., 4:-nm], axis=-1) > conf_threshold]
+        # Create a new matrix which merge these(box, score, cls, nm) into one
+        # For more details about `numpy.c_()`: https://numpy.org/doc/1.26/reference/generated/numpy.c_.html
+        x = np.c_[x[..., :4], np.amax(x[..., 4:-nm], axis=-1), np.argmax(x[..., 4:-nm], axis=-1), x[..., -nm:]]
+
+        # NMS filtering
+        x = x[cv2.dnn.NMSBoxes(x[:, :4], x[:, 4], conf_threshold, iou_threshold)]
+        # Decode and return
+        if len(x) > 0:
+
+            # Bounding boxes format change: cxcywh -> xyxy
+            x[..., [0, 1]] -= x[..., [2, 3]] / 2
+            x[..., [2, 3]] += x[..., [0, 1]]
+
+            # Rescales bounding boxes from model shape(model_height, model_width) to the shape of original image
+            x[..., :4] -= [pad_w, pad_h, pad_w, pad_h]
+            x[..., :4] /= min(ratio)
+
+            # Bounding boxes boundary clamp
+            x[..., [0, 2]] = x[:, [0, 2]].clip(0, im0.shape[1])
+            x[..., [1, 3]] = x[:, [1, 3]].clip(0, im0.shape[0])
+
+            # Process masks
+            masks = self.process_mask(protos[0], x[:, 6:], x[:, :4], im0.shape)
+
+            # Masks -> Segments(contours)
+            # segments = self.masks2segments(masks)
+            segments = tuple(map(self.mask_to_shape, masks))
+            return x[..., :6], list(segments), masks  # boxes, segments, masks
+        else:
+            return [], [], []
+
     @staticmethod
     def masks2segments(masks):
         """
@@ -122,10 +163,10 @@ class YOLOv8Seg:
         """
         """
         c, mh, mw = protos.shape
-        masks = np.matmul(masks_in, protos.reshape((c, -1))).reshape((-1, mh, mw)).transpose(1, 2, 0) # HWN
+        masks = np.matmul(masks_in, protos.reshape((c, -1))).reshape((-1, mh, mw)).transpose(1, 2, 0)  # HWN
         masks = np.ascontiguousarray(masks)
-        masks = self.scale_mask(masks, im0_shape) # re-scale masks
-        masks = np.einsum('HWN -> NHW', masks) # HWN -> NHW
+        masks = self.scale_mask(masks, im0_shape)  # re-scale mask from P3 shape to original input image shape
+        masks = np.einsum('HWN -> NHW', masks)  # HWN -> NHW
         masks = self.crop_mask(masks, bboxes)
         return np.greater(masks, 0.5)
     
@@ -134,21 +175,21 @@ class YOLOv8Seg:
         """
         """
         im1_shape = masks.shape[:2]
-        if ratio_pad is None:
-            gain = min(im1_shape[0] / im0_shape[0], im1_shape[1] / im0_shape[1])
-            pad = (im1_shape[1] - im0_shape[1] * gain) / 2, (im1_shape[0] - im0_shape[0] * gain) / 2
+        if ratio_pad is None:  # calculate from im0_shape
+            gain = min(im1_shape[0] / im0_shape[0], im1_shape[1] / im0_shape[1])  # gain  = old / new
+            pad = (im1_shape[1] - im0_shape[1] * gain) / 2, (im1_shape[0] - im0_shape[0] * gain) / 2  # wh padding
         else:
             pad = ratio_pad[1]
         # Calculate tlbr of mask
-        top, left = int(round(pad[1] - 0.1)), int(round(pad[0] - 0.1)) # y, x
+        top, left = int(round(pad[1] - 0.1)), int(round(pad[0] - 0.1))  # y, x
         bottom, right = int(round(im1_shape[0] - pad[1] + 0.1)), int(round(im1_shape[1] - pad[0] + 0.1))
         if len(masks.shape) < 2:
             raise ValueError(f'"len of masks shape" should be 2 or 3, but got {len(masks.shape)}')
         masks = masks[top:bottom, left:right]
-        masks = cv2.resize(masks, (im0_shape[1], im0_shape[0]), interpolation=cv2.INTER_CUBIC)
+        masks = cv2.resize(masks, (im0_shape[1], im0_shape[0]), interpolation=cv2.INTER_CUBIC)  # INTER_CUBIC would be better
         if len(masks.shape) == 2:
-            masks = [masks[:, :, None]]
-        return masks
+            masks = masks[:, :, None]
+        return masks    
     
     @staticmethod
     def mask_to_shape(mask):
