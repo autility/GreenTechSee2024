@@ -4,8 +4,7 @@ from collections import defaultdict
 from scipy import ndimage
 from shapely.geometry import Polygon
 
-def generate_graph(all_room_edges, res):
-    # viz_image = np.zeros((res, res, 3), dtype=np.uint8)
+def generate_graph(all_room_edges):
     all_colinear_pairs = find_all_colinear_pairs(all_room_edges)
     colinear_sets = combine_colinear_edges(all_colinear_pairs)
 
@@ -45,15 +44,12 @@ def generate_graph(all_room_edges, res):
             global_graph[c2] += [c1, ]
     for corner in global_graph:
         global_graph[corner] = list(set(global_graph[corner]))
-
-    # for c, connections in global_graph.items():
-    #     for other_c in connections:
-    #         cv2.line(viz_image, (int(c[0]), int(c[1])), (int(other_c[0]), int(other_c[1])), (255, 255, 0), 1)
-    # for c in global_graph.keys():
-    #     cv2.circle(viz_image, (int(c[0]), int(c[1])), 1, (0, 0, 255), -1)
-  
-    # path = (out_path + str(indx) + '.png')
-    # cv2.imwrite(path, viz_image)
+     
+    # print(global_graph.keys())
+    # print(global_graph.items())
+    # graph_dict = {key: values for key, values in global_graph.items()}
+    # print(list(graph_dict.keys()))
+    return global_graph
 
 def find_all_colinear_pairs(all_room_edges):
     colinear_pairs = list()
@@ -492,4 +488,3 @@ def draw_room_seg_from_edges(edges, im_size):
     room_map[np.where(label == room_label)] = 1
 
     return room_map
-
